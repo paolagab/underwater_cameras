@@ -1,6 +1,13 @@
 #-----------------------------------------------------------------------------
 # utils.R
-# Shared helper functions used across the project's scripts.
+# Description: Shared helper functions used across the project's scripts.
+#              bb() builds a densified global bounding box polygon, adapted
+#              from March et al. (2020):
+#
+#              March, D., Boehme, L., Tintoré, J., Vélez-Belchi, P.J., and
+#              Godley, B.J. (2020). Towards the integration of animal-borne
+#              instruments into global ocean observing systems. Global
+#              Change Biology 26, 586-596. https://doi.org/10.1111/gcb.14902
 #-----------------------------------------------------------------------------
 
 library(sf)

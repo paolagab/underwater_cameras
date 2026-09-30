@@ -1,28 +1,19 @@
-#---------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 # study_area.R
+# Description: Generates a global ocean mask and ancillary spatial layers
+#              for subsequent analyses of biodiversity sampling effort and
+#              fishing activity. Aggregates GEBCO bathymetry from 15
+#              arc-second resolution to 1°, estimates the proportion of
+#              ocean surface within each cell, and removes cells with <10%
+#              ocean area, continental depressions/inland water bodies, and
+#              the Caspian Sea. All layers are reprojected onto a global
+#              Mollweide equal-area grid, and effective ocean area (km²) is
+#              calculated per analysis cell.
 #
-# Purpose:
-# Generate a global ocean mask and ancillary spatial layers for subsequent
-# analyses of biodiversity sampling effort and fishing activity.
-#
-# Main processing steps:
-#   1. Aggregate GEBCO bathymetry from 15 arc-second resolution to 1°.
-#   2. Estimate the proportion of ocean surface within each 1° cell.
-#   3. Remove cells containing <10% ocean area.
-#   4. Exclude continental depressions and inland water bodies.
-#   5. Exclude the Caspian Sea.
-#   6. Reproject all layers to a global Mollweide equal-area grid.
-#   7. Calculate effective ocean area (km²) per analysis cell.
-#
-# Outputs:
-#   - Bathymetry raster (Mollweide)
-#   - Ocean mask raster (Mollweide)
-#   - Ocean fraction raster (Mollweide)
-#   - Effective ocean area raster (km²)
-#   - Land polygons (Mollweide)
-#
-# Author: Paola Gabasa
-#---------------------------------------------------------------------------------
+#              Outputs: bathymetry, ocean mask, ocean fraction, and
+#              effective ocean area rasters (all Mollweide), plus land
+#              polygons (Mollweide).
+#-----------------------------------------------------------------------------
 
 library(terra)
 library(sf)
@@ -32,7 +23,7 @@ source("R/utils.R")
 source("R/data_paths.R")
 
 #------------------------------------------------------------------------------
-# USER PARAMETERS
+# 0. USER PARAMETERS
 #------------------------------------------------------------------------------
 
 # Minimum ocean fraction required for a cell to be retained
@@ -43,7 +34,7 @@ exclude_area <- 0.10
 fact <- 240
 
 #------------------------------------------------------------------------------
-# LOAD INPUT DATA
+# 1. LOAD INPUT DATA
 #------------------------------------------------------------------------------
 
 message("Loading GEBCO bathymetry and land polygons...")
@@ -57,7 +48,7 @@ land_v <- vect(land)
 crs(land_v) <- "EPSG:4326"
 
 #------------------------------------------------------------------------------
-# GENERATE A CLEAN OCEAN MASK
+# 2. GENERATE A CLEAN OCEAN MASK
 #------------------------------------------------------------------------------
 
 message("Building ocean mask from bathymetry (this can take a while at native GEBCO resolution)...")
@@ -79,7 +70,7 @@ om <- mask(om, land_v, inverse = TRUE)
 gebco_mask <- gebco * om
 
 #------------------------------------------------------------------------------
-# AGGREGATE TO 1° RESOLUTION
+# 3. AGGREGATE TO 1° RESOLUTION
 #------------------------------------------------------------------------------
 
 message("Aggregating to 1° resolution...")
@@ -104,7 +95,7 @@ gebco_1d <- aggregate(
 )
 
 #------------------------------------------------------------------------------
-# REMOVE CELLS WITH <10% OCEAN COVER
+# 4. REMOVE CELLS WITH <10% OCEAN COVER
 #------------------------------------------------------------------------------
 
 message(sprintf("Removing cells with <%.0f%% ocean cover...", exclude_area * 100))
@@ -121,7 +112,7 @@ om_1d_rec <- classify(
 )
 
 #------------------------------------------------------------------------------
-# REMOVE CELLS DOMINATED BY LAND
+# 5. REMOVE CELLS DOMINATED BY LAND
 #------------------------------------------------------------------------------
 
 message("Removing cells dominated by land (>90% land cover)...")
@@ -161,7 +152,7 @@ rland_rec <- classify(
 )
 
 #------------------------------------------------------------------------------
-# FINAL OCEAN MASK
+# 6. FINAL OCEAN MASK
 #------------------------------------------------------------------------------
 
 message("Assembling final ocean mask and excluding the Caspian Sea...")
@@ -181,7 +172,7 @@ final_ocean_mask[cells(final_ocean_mask, ec)] <- NA
 gebco_1d <- gebco_1d * final_ocean_mask
 
 #------------------------------------------------------------------------------
-# CREATE TARGET MOLLWEIDE GRID
+# 7. CREATE TARGET MOLLWEIDE GRID
 #------------------------------------------------------------------------------
 
 r <- rast(
@@ -191,7 +182,7 @@ r <- rast(
 )
 
 #------------------------------------------------------------------------------
-# REPROJECT TO MOLLWEIDE
+# 8. REPROJECT TO MOLLWEIDE
 #------------------------------------------------------------------------------
 
 message("Reprojecting to Mollweide...")
@@ -220,7 +211,7 @@ land.prj <- st_transform(
 )
 
 #------------------------------------------------------------------------------
-# CALCULATE EFFECTIVE OCEAN AREA
+# 9. CALCULATE EFFECTIVE OCEAN AREA
 #------------------------------------------------------------------------------
 
 message("Calculating effective ocean area per cell...")
@@ -265,12 +256,14 @@ total_ocean_area_km2 <- global(effective_ocean_area, "sum", na.rm = TRUE)[1, 1]
 message(sprintf("Total effective ocean area: %.0f km²", total_ocean_area_km2))
 
 #------------------------------------------------------------------------------
-# OCEAN BASIN ASSIGNMENT (Global Oceans and Seas, GOaS v1 -- Flanders Marine
+# 10. OCEAN BASIN ASSIGNMENT 
+#------------------------------------------------------------------------------
+
+#(Global Oceans and Seas, GOaS v1 -- Flanders Marine
 # Institute). Replaces the earlier IHO Sea Areas v3 workflow: GOaS already
 # ships pre-aggregated into 10 named units (no need to grepl-match dozens of
 # individual marginal seas, and no centroid-based lat/lon fallback -- which
 # also removes the antimeridian-centroid risk that approach carried).
-#------------------------------------------------------------------------------
 
 message("Assigning ocean basins using Global Oceans and Seas (GOaS v1)...")
 
@@ -318,7 +311,7 @@ saveRDS(oceans_sf_wgs84, temp_ocean_basins)
  
 
 # ----------------------------------------------------
-# Asign each grid cell to an ocean basin 
+# 11. Asign each grid cell to an ocean basin 
 # ----------------------------------------------------
 df_cells <- as.data.frame(mask.prj, xy = TRUE, na.rm = TRUE)
 colnames(df_cells)[3] <- "mask_val"
@@ -366,7 +359,7 @@ ggplot(basin_lookup, aes(x = x, y = y, color = ocean_basin)) +
   theme_minimal() +
   labs(color = "Ocean basin")
 #------------------------------------------------------------------------------
-# EXPORT OUTPUTS
+# 12. EXPORT OUTPUTS
 #------------------------------------------------------------------------------
 
 message("Writing outputs...")

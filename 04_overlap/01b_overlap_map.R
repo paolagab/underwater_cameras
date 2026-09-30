@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# 03_overlap_bivariate_map.R
+# 03_overlap_map.R
 # Description: "Impact figure" combining undersampled OBIS areas and high
 #              GFW fishing effort areas into a single panel.
 #
