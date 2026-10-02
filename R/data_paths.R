@@ -4,8 +4,6 @@
 # generated throughout the project. Lives in the R/ project folder,
 # alongside utils.R (helper functions used across scripts).
 #
-# NOTE: this is a first pass covering the folders and outputs used so
-# far. It will be revised as each pipeline script is reviewed.
 #----------------------------------------------------------------
 
 # Projections ----------------------------------------------------------
@@ -22,9 +20,7 @@ if (user == "paola") main_path <- "C:/Users/paoga/OneDrive - Universitat de ValÃ
 
 raw_dir  <- paste0(main_path, "data/raw")   # raw input data
 temp_dir <- paste0(main_path, "data/temp")  # intermediate/temporary products
-out_dir  <- paste0(main_path, "data/out")   # final outputs (rasters, tables)
-fig_dir  <- paste0(main_path, "fig")        # figures
-tbl_dir  <- paste0(main_path, "tbl")        # tables
+out_dir  <- paste0(main_path, "data/out")   # final outputs (rasters, tables, figures)
 
 for (d in c(raw_dir, temp_dir, out_dir, fig_dir, tbl_dir)) {
   if (!dir.exists(d)) dir.create(d, recursive = TRUE)
@@ -63,10 +59,7 @@ eez_gpkg       <- paste(raw_dir, "marine_regions/eez_v12.gpkg", sep = "/")
 high_seas_gpkg <- paste(raw_dir, "marine_regions/High_Seas_v2.gpkg", sep = "/")
 eez_shp_path <- paste(raw_dir, "marine_regions/eez_lowresolution.shp", sep = "/")
 high_seas_shp_path <- paste(raw_dir, "marine_regions/High_Seas_v1_geom_corrected.shp", sep = "/")
-# obis_data
-# Raw OBIS occurrence parquet dump, queried via DuckDB in the OBIS
-# extraction script. Folder selected interactively at run time
-# (rstudioapi::selectDirectory()); not a fixed path.
+
 
 
 ### Do not edit below this line without checking dependent scripts ###
@@ -149,17 +142,3 @@ flag_ranking_highseas_csv  <- paste(overlap_dir, "flag_ranking_highseas.csv", se
 barplot_flag_jurisdiction_png <- paste(overlap_dir, "barplot_flag_by_jurisdiction.png", sep = "/")
 
 
-# --- Other project components (not covered in the current pipeline) ---
-# Kept as placeholders; unrelated to the OBIS / fishing effort / overlap
-# analysis above (separate part of the wider project).
-
-study_area_dir  <- paste(out_dir, "study_area", sep = "/")
-eoo_dir         <- paste(out_dir, "eoo", sep = "/")
-telemetry_dir   <- paste(out_dir, "telemetry", sep = "/")
-eoo_tempdir       <- paste(temp_dir, "eoo", sep = "/")
-telemetry_tempdir <- paste(temp_dir, "telemetry", sep = "/")
-
-# --- Legacy paths (written early on, not currently used) ---
-# obis_coldspots_shp        <- paste(temp_dir, "obis_coldspots", sep = "/")
-# coldspots_latitude_csv    <- paste(temp_dir, "coldspots_latitude.csv", sep = "/")
-# coldspots_bathymetry_csv  <- paste(temp_dir, "coldspots_bathymetry.csv", sep = "/")

@@ -231,7 +231,7 @@ sf_use_s2(FALSE)
 
 EEZ_COUNTRY_FIELD <- "SOVEREIGN1"
 
-# 1. Load EEZ, wrap/break at antimeridian, and then reproject
+# Load EEZ, wrap/break at antimeridian, and then reproject
 eez_sf <- st_read(eez_shp_path, quiet = TRUE) %>% 
   st_transform(4326) %>%                        # Force WGS84 first
   st_make_valid() %>% 
@@ -240,7 +240,7 @@ eez_sf <- st_read(eez_shp_path, quiet = TRUE) %>%
   st_transform(PROJ) %>%                        # Reproject to Mollweide
   st_make_valid()
 
-# 2. Load High Seas with the same treatment
+# Load High Seas with the same treatment
 high_seas_sf <- st_read(high_seas_shp_path, quiet = TRUE) %>% 
   st_transform(4326) %>% 
   st_make_valid() %>% 
@@ -251,12 +251,12 @@ high_seas_sf <- st_read(high_seas_shp_path, quiet = TRUE) %>%
 
 stopifnot(EEZ_COUNTRY_FIELD %in% names(eez_sf))
 
-# 3. Prepare overlap points
+# Prepare overlap points
 overlap_pts <- overlap_sf %>% 
   st_make_valid() %>% 
   mutate(cell_id = row_number())
 
-# 4. Spatial intersections
+# Spatial intersections
 in_eez <- st_join(overlap_pts, eez_sf[, EEZ_COUNTRY_FIELD], join = st_intersects, left = TRUE) %>%
   st_drop_geometry() %>%
   select(cell_id, eez_country = all_of(EEZ_COUNTRY_FIELD)) %>%
@@ -268,7 +268,7 @@ in_high_seas <- st_join(overlap_pts, high_seas_sf, join = st_intersects, left = 
 
 in_high_seas$is_high_seas <- !is.na(in_high_seas[[names(high_seas_sf)[1]]])
 
-# 5. Combined classification
+# Combined classification
 jurisdiction <- overlap_pts %>%
   st_drop_geometry() %>%
   select(cell_id, x, y) %>%
@@ -282,7 +282,7 @@ jurisdiction <- overlap_pts %>%
     )
   )
 
-# 6. Assign residual boundary/coastal cells by minimum distance
+# Assign residual boundary/coastal cells by minimum distance
 n_unclassified <- sum(is.na(jurisdiction$jurisdiction))
 
 if (n_unclassified > 0) {
